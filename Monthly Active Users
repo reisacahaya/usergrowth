@@ -1,0 +1,20 @@
+with coba as
+    (select id, author, time_ts,'comments' type
+    from `bigquery-public-data.hacker_news.comments` as c
+    where extract(year from time_ts) in (2014)
+    union distinct
+    select id, author, time_ts, 'post' type
+    from `bigquery-public-data.hacker_news.stories` as s
+    where extract(year from time_ts) in (2014)),
+data1 as
+    (select date(date_trunc(time_ts,month)) as month_post,
+          count(case when type='comments'then id end) as total_comments,
+          count(distinct case when type='comments' then author end) as total_users_comments,
+          count(case when type='post'then id end) as total_stories,
+          count(distinct case when type='post' then author end) as
+          total_users_stories,
+          count (distinct author) as Monthly_Active_User,
+    from coba
+    group by 1)
+select *
+from data1 order by month_post
